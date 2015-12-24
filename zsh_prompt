@@ -1,0 +1,73 @@
+autoload -U colors && colors
+
+function __git_ps1 {
+    git status --porcelain --branch 2>/dev/null | awk '
+        function second(str, split_pat, _a) {
+            split(str, _a, split_pat); return _a[2]
+        }
+        function rstrip(str, len) {
+            return substr(str, 1, length(str) - len)
+        }
+        function color(name, bold) {
+            return "%{$fg" bold "[" name "]%}"
+        }
+        $1 == "##" {
+           split($2, a, /\.\.\./); local_branch = a[1]; remote_branch = a[2];
+           split(rstrip(second($0, "["), 1), a, ", ");
+               ahead = second(a[1], " "); behind = second(a[2], " ");
+        }
+        $1 ~ /\?/ {untracked += 1}
+        $1 ~ /[MADRCU]+/ {modified += 1}
+        END {
+            if (modified) {
+                local_color = color("red");
+                start = "{"; end = "}";
+            } else if (untracked) {
+                local_color = color("cyan");
+                start = "["; end = "]";
+            } else if (local_branch) {
+                local_color = color("green");
+                start = "("; end = ")";
+            }
+            prompt = local_color start local_branch end
+
+            if (behind) {
+                ab = color("yellow") behind "←"
+            }
+            if (ahead) {
+                ab = ab color("red") "→" ahead
+            }
+            if (ab) {
+                prompt = prompt " " ab color("grey", "_bold") " " remote_branch
+            }
+            print prompt
+        }
+    '
+}
+
+function len {
+    echo $1
+    return ${#${(%):-$1}}
+}
+
+function precmd {
+    local _tick_color="%{%(?.$fg_bold[green].$fg_bold[red])%}"
+    local _tick_symbol="%(?.✓.✗)"
+    local _prompt_line2="%m@%m $_tick_color$_tick_symbol%{$reset_color%} "
+    # echo $(len $_left)
+    # _fill_bar=${(l.(($COLUMNS - 2 - $(len $_left) - $(len $_right)))
+    # _prompt_line1=$(__git_ps1)
+    PROMPT="
+${(e)$(__git_ps1)}
+$_prompt_line2
+"
+}
+
+# _left="%/"
+# _right="%T"
+# _prompt_line1="%/ $_fill_bar %T"
+
+
+# PS1="${(l.(($COLUMNS - 1))..-.)}
+# $_prompt_line1
+# $_prompt_line2"
