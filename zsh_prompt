@@ -40,10 +40,23 @@ function __git_ps1 {
             if (ab) {
                 prompt = prompt " " ab color("grey", "_bold") " " remote_branch
             }
-            print prompt
-        }
-    '
+            print prompt "%{$reset_color%}"
+        }'
 }
+
+function __jobs_ps1 (
+    jobs | awk '
+        $3 == "suspended" {suspended += 1}
+        END {
+            if (NR) {
+                if (suspended) {
+                    suspended_prompt = "%{$fg_bold[red]%}" suspended "%{$reset_color%}/"
+                }
+                prompt = "[" suspended_prompt NR "]"
+            }
+            print prompt
+        }'
+)
 
 function len {
     echo $1
@@ -51,16 +64,19 @@ function len {
 }
 
 function precmd {
+    local _pwd="%{$fg_bold[blue]%}%~%{$reset_color%}"
+    local _venv="%{$fg_bold[black]%}${VIRTUAL_ENV##*/}%{$reset_color%}"
+    local _time="%{$fg_bold[grey]%}%T%{$reset_color%}"
+
     local _tick_color="%{%(?.$fg_bold[green].$fg_bold[red])%}"
     local _tick_symbol="%(?.✓.✗)"
-    local _prompt_line2="%m@%m $_tick_color$_tick_symbol%{$reset_color%} "
+    local _prompt_line2="%n@%m $_tick_color$_tick_symbol%{$reset_color%} "
     # echo $(len $_left)
     # _fill_bar=${(l.(($COLUMNS - 2 - $(len $_left) - $(len $_right)))
     # _prompt_line1=$(__git_ps1)
     PROMPT="
-${(e)$(__git_ps1)}
-$_prompt_line2
-"
+$_pwd $_venv ${(e)$(__git_ps1)} ${(e)$(__jobs_ps1)} $_time
+$_prompt_line2 "
 }
 
 # _left="%/"
