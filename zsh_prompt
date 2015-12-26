@@ -11,6 +11,7 @@ function __git_ps1 {
         function color(name, bold) {
             return "%{$fg" bold "[" name "]%}"
         }
+        BEGIN {reset = "%{$reset_color%}"}
         $1 == "##" {
            split($2, a, /\.\.\./); local_branch = a[1]; remote_branch = a[2];
            split(rstrip(second($0, "["), 1), a, ", ");
@@ -21,16 +22,20 @@ function __git_ps1 {
         END {
             if (local_branch) {
                 if (modified) {
-                    local_color = color("red");
-                    start = "{"; end = "}";
+                    local_color = color("red")
+                    start = "{"
+                    end = "}"
+                    if (untracked) {
+                        end = end color("cyan", "_bold") "!"
+                    }
                 } else if (untracked) {
-                    local_color = color("cyan");
-                    start = "["; end = "]";
+                    local_color = color("cyan")
+                    start = "["; end = "]"
                 } else {
-                    local_color = color("green");
-                    start = "("; end = ")";
+                    local_color = color("green")
+                    start = "("; end = ")"
                 }
-                prompt = local_color start local_branch end
+                prompt = local_color start local_branch end reset
 
                 if (behind) {
                     ab = color("yellow") behind "←"
@@ -41,7 +46,7 @@ function __git_ps1 {
                 if (ab) {
                     prompt = prompt " " ab color("grey", "_bold") " " remote_branch
                 }
-                print " " prompt "%{$reset_color%}"
+                print " " prompt reset
             }
         }'
 }
