@@ -89,7 +89,6 @@ function precmd {
         local _rule=%{$fg_bold[grey]%}${(r:$remaining::─:: :)}%{$reset_color%}
     else
         local _pwd="%$(($COLUMNS - $prompt_len))<…<%~%<<"
-        echo boo $_pwd
     fi
     _pwd="%{$fg_bold[blue]%}$_pwd%{$reset_color%}"
 
