@@ -40,7 +40,7 @@ function __git_ps1 {
             if (ab) {
                 prompt = prompt " " ab color("grey", "_bold") " " remote_branch
             }
-            print prompt "%{$reset_color%}"
+            print " " prompt "%{$reset_color%}"
         }'
 }
 
@@ -52,38 +52,39 @@ function __jobs_ps1 (
                 if (suspended) {
                     suspended_prompt = "%{$fg_bold[red]%}" suspended "%{$reset_color%}/"
                 }
-                prompt = "[" suspended_prompt NR "]"
+                prompt = " [" suspended_prompt NR "]"
             }
             print prompt
         }'
 )
 
-function len {
-    echo $1
-    return ${#${(%):-$1}}
-}
-
 function precmd {
-    local _pwd="%{$fg_bold[blue]%}%~%{$reset_color%}"
     local _venv="%{$fg_bold[black]%}${VIRTUAL_ENV##*/}%{$reset_color%}"
-    local _time="%{$fg_bold[grey]%}%T%{$reset_color%}"
+    local _git="${(e)$(__git_ps1)}"
+    local _jobs="${(e)$(__jobs_ps1)}"
+    local _time=" %{$fg_bold[grey]%}%D{%H:%M}%{$reset_color%}"
+
+    local ignore_pat="%{*%}"
+    local prompt_len="$_venv$_git$_jobs$_time"
+    local prompt_len=${#${(%)${(S)prompt_len//$~ignore_pat}}}
+    local pwd_len=${#${(%):-%~}}
+    local remaining=$(($COLUMNS - $prompt_len - $pwd_len))
+
+    if [[ $remaining -gt 0 ]]; then
+        local _pwd=%~
+        local _rule=%{$fg_bold[grey]%}${(r:$remaining::─:: :)}%{$reset_color%}
+    else
+        local _pwd="%$(($COLUMNS - $prompt_len))<…<%~%<<"
+        echo boo $_pwd
+    fi
+    _pwd="%{$fg_bold[blue]%}$_pwd%{$reset_color%}"
+
+    local _prompt_line1="$_pwd$venv$_git$_rule$_jobs$_time"
 
     local _tick_color="%{%(?.$fg_bold[green].$fg_bold[red])%}"
     local _tick_symbol="%(?.✓.✗)"
     local _prompt_line2="%n@%m $_tick_color$_tick_symbol%{$reset_color%} "
-    # echo $(len $_left)
-    # _fill_bar=${(l.(($COLUMNS - 2 - $(len $_left) - $(len $_right)))
-    # _prompt_line1=$(__git_ps1)
     PROMPT="
-$_pwd $_venv ${(e)$(__git_ps1)} ${(e)$(__jobs_ps1)} $_time
-$_prompt_line2 "
+$_prompt_line1
+$_prompt_line2"
 }
-
-# _left="%/"
-# _right="%T"
-# _prompt_line1="%/ $_fill_bar %T"
-
-
-# PS1="${(l.(($COLUMNS - 1))..-.)}
-# $_prompt_line1
-# $_prompt_line2"
