@@ -19,28 +19,30 @@ function __git_ps1 {
         $1 ~ /\?/ {untracked += 1}
         $1 ~ /[MADRCU]+/ {modified += 1}
         END {
-            if (modified) {
-                local_color = color("red");
-                start = "{"; end = "}";
-            } else if (untracked) {
-                local_color = color("cyan");
-                start = "["; end = "]";
-            } else if (local_branch) {
-                local_color = color("green");
-                start = "("; end = ")";
-            }
-            prompt = local_color start local_branch end
+            if (local_branch) {
+                if (modified) {
+                    local_color = color("red");
+                    start = "{"; end = "}";
+                } else if (untracked) {
+                    local_color = color("cyan");
+                    start = "["; end = "]";
+                } else {
+                    local_color = color("green");
+                    start = "("; end = ")";
+                }
+                prompt = local_color start local_branch end
 
-            if (behind) {
-                ab = color("yellow") behind "←"
+                if (behind) {
+                    ab = color("yellow") behind "←"
+                }
+                if (ahead) {
+                    ab = ab color("red") "→" ahead
+                }
+                if (ab) {
+                    prompt = prompt " " ab color("grey", "_bold") " " remote_branch
+                }
+                print " " prompt "%{$reset_color%}"
             }
-            if (ahead) {
-                ab = ab color("red") "→" ahead
-            }
-            if (ab) {
-                prompt = prompt " " ab color("grey", "_bold") " " remote_branch
-            }
-            print " " prompt "%{$reset_color%}"
         }'
 }
 
