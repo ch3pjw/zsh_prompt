@@ -44,7 +44,7 @@ function __git_ps1 {
         }'
 }
 
-function __jobs_ps1 (
+function __jobs_ps1 {
     jobs | awk '
         $3 == "suspended" {suspended += 1}
         END {
@@ -56,16 +56,28 @@ function __jobs_ps1 (
             }
             print prompt
         }'
-)
+}
+
+function __tmux_ps1 {
+    if [[ -n $TMUX ]]; then
+        local tmux_session=$(tmux display-message -p "#S")
+        local num_clients=$(tmux list-clients -t $tmux_session | wc -l)
+        if [[ $num_clients -gt 1 ]]; then
+            echo " %{$fg[yellow]%}⎚ $num_clients%{$reset_color%}"
+        fi
+    fi
+}
 
 function precmd {
     local _venv="%{$fg_bold[black]%}${VIRTUAL_ENV##*/}%{$reset_color%}"
     local _git="${(e)$(__git_ps1)}"
+    local _tmux="${(e)$(__tmux_ps1)}"
     local _jobs="${(e)$(__jobs_ps1)}"
     local _time=" %{$fg_bold[grey]%}%D{%H:%M}%{$reset_color%}"
+    local content='$_pwd$venv$_git$_rule$_tmux$_jobs$_time'
 
     local ignore_pat="%{*%}"
-    local prompt_len="$_venv$_git$_jobs$_time"
+    local prompt_len=${(e)content}
     local prompt_len=${#${(%)${(S)prompt_len//$~ignore_pat}}}
     local pwd_len=${#${(%):-%~}}
     local remaining=$(($COLUMNS - $prompt_len - $pwd_len))
@@ -79,7 +91,7 @@ function precmd {
     fi
     _pwd="%{$fg_bold[blue]%}$_pwd%{$reset_color%}"
 
-    local _prompt_line1="$_pwd$venv$_git$_rule$_jobs$_time"
+    local _prompt_line1=${(e)content}
 
     local _tick_color="%{%(?.$fg_bold[green].$fg_bold[red])%}"
     local _tick_symbol="%(?.✓.✗)"
