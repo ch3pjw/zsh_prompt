@@ -43,7 +43,7 @@ function __git_ps1 {
                     ab = ab color("red") "→" ahead
                 }
                 if (ab) {
-                    prompt = prompt " " ab color("grey", "_bold") " " remote_branch
+                    prompt = prompt " " ab
                 }
                 print " " prompt "%{$reset_color%}"
             }
