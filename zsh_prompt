@@ -58,7 +58,7 @@ function __jobs_ps1 {
                 if (suspended) {
                     suspended_prompt = "%{$fg_bold[red]%}" suspended "%{$reset_color%}/"
                 }
-                prompt = " [" suspended_prompt NR "]"
+                prompt = " [" suspended_prompt (NR - 1) "]"
             }
             print prompt
         }'
