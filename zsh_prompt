@@ -13,8 +13,18 @@ function __git_ps1 {
         }
         $1 == "##" {
            split($2, a, /\.\.\./); local_branch = a[1]; remote_branch = a[2];
-           split(rstrip(second($0, "["), 1), a, ", ");
+           # FIXME: there is a bug here if we are behind but not ahead too!
+           n = split(rstrip(second($0, "["), 1), a, ", ");
+           if (n == 1) {
+               n_commits = second(a[1], " ")
+               if (a[1] ~ /ahead/) {
+                   ahead = n_commits
+               } else {
+                   behind = n_commits
+               }
+           } else {
                ahead = second(a[1], " "); behind = second(a[2], " ");
+           }
         }
         $1 ~ /\?/ {untracked += 1}
         $1 ~ /[MADRCU]+/ {modified += 1}
