@@ -33,9 +33,12 @@ function __git_ps1 {
                 if (modified) {
                     local_color = color("red")
                     start = "{"
+                    if (untracked) {
+                        pre = color("cyan") "["
+                    }
                     end = "}"
                     if (untracked) {
-                        end = end color("cyan") "!"
+                        post = color("cyan") "]"
                     }
                 } else if (untracked) {
                     local_color = color("cyan")
@@ -44,7 +47,7 @@ function __git_ps1 {
                     local_color = color("green")
                     start = "("; end = ")"
                 }
-                prompt = local_color start local_branch end
+                prompt = pre local_color start local_branch end post
 
                 if (behind) {
                     ab = color("yellow") behind "←"
